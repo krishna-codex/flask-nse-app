@@ -1,27 +1,40 @@
-import webbrowser
-from flask import Flask, render_template_string
-import pandas as pd
-from threading import Timer
+import time
+import undetected_chromedriver as uc
+from selenium.webdriver.common.by import By
 
-app = Flask(__name__)
-file_path = "FII_DII_Trading_Activity_July_16_2025.xlsx"
-df_nse = pd.read_excel(file_path, sheet_name="NSE Only")
-df_all = pd.read_excel(file_path, sheet_name="NSE_BSE_MSEI")
+def connect_to_fii_dii_page():
+    # Set up Chrome options
+    options = uc.ChromeOptions()
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--start-maximized')
+    # Don't use headless mode if you want the browser to stay open
+    # options.add_argument('--headless')  # Only if you want headless
 
-HTML = """
-<!doctype html><html><head><title>Dashboard</title></head><body>
-<h2>NSE Only</h2>{{ nse | safe }}
-<h2>NSE + BSE + MSEI</h2>{{ all | safe }}
-</body></html>
-"""
+    # Start browser session
+    print("🌐 Launching browser and connecting to NSE FII/DII page...")
+    driver = uc.Chrome(options=options)
 
-@app.route('/')
-def index():
-    return render_template_string(HTML, nse=df_nse.to_html(index=False), all=df_all.to_html(index=False))
+    try:
+        # Open FII/DII Reports page
+        driver.get("https://www.nseindia.com/reports/fii-dii")
+        time.sleep(6)  # Allow time for JavaScript-heavy content to load
 
-def open_browser():
-    webbrowser.open_new("http://127.0.0.1:5000/")
+        print(f"✅ Connected. Page title: {driver.title}")
+        print("🚦 Browser will remain open. Press Ctrl+C to exit in terminal.")
+        
+        # Keep browser open without quitting
+        while True:
+            time.sleep(1)
 
-if __name__ == '__main__':
-    Timer(1, open_browser).start()
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    except KeyboardInterrupt:
+        print("🧹 Exit requested. Closing browser.")
+        driver.quit()
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        driver.quit()
+
+# ✅ Fixed line below
+if __name__ == "__main__":
+    connect_to_fii_dii_page()
