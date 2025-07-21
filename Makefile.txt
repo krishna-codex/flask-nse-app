@@ -1,0 +1,11 @@
+# Makefile for building and running the Docker container
+
+IMAGE_NAME = web_scraper
+
+build:
+	docker build -t $(IMAGE_NAME) .
+
+run:
+	docker run --rm -it $(IMAGE_NAME)
+
+.PHONY: build run
