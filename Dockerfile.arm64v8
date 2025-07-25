@@ -1,0 +1,32 @@
+FROM python:3.11-slim-bullseye
+
+# Avoid Python writing .pyc files and buffering stdout
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set environment variables for Chrome
+ENV CHROME_BIN=/usr/bin/google-chrome
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    wget gnupg unzip curl \
+    chromium chromium-driver \
+    build-essential gcc \
+    libpq-dev python3-dev libffi-dev libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy project files
+COPY . .
+
+# Create and activate virtualenv, install requirements
+RUN python -m venv venv && \
+    . venv/bin/activate && \
+    venv/bin/pip install --upgrade pip && \
+    venv/bin/pip install -r requirements.txt
+
+# Run app
+CMD ["/bin/sh", "-c", ". venv/bin/activate && python app.py"]
