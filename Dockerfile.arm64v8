@@ -1,0 +1,37 @@
+FROM python:3.11-slim-bullseye
+
+# Avoid buffering logs
+ENV PYTHONUNBUFFERED=1
+
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget curl unzip gnupg ca-certificates \
+    chromium chromium-driver \
+    build-essential libglib2.0-0 libnss3 libgconf-2-4 libx11-xcb1 libxcomposite1 libxcursor1 \
+    libxdamage1 libxrandr2 libgbm-dev libasound2 libatk-bridge2.0-0 libgtk-3-0 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Set Chrome/Chromedriver paths for Selenium
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+
+# Create app directory
+WORKDIR /app
+
+# Copy and install requirements using virtualenv
+COPY requirements.txt .
+RUN python -m venv /opt/venv && \
+    /opt/venv/bin/pip install --upgrade pip && \
+    /opt/venv/bin/pip install -r requirements.txt
+
+# Activate virtualenv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy the full source code
+COPY . .
+
+# Ensure chromedriver has permission
+RUN chmod +x /usr/bin/chromedriver
+
+# Set default command with real-time output
+CMD ["python", "app.py"]
