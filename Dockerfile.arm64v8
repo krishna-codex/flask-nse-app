@@ -1,0 +1,35 @@
+FROM python:3.11-slim-bullseye
+
+# Set environment variables for unbuffered logs
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget curl unzip gnupg ca-certificates \
+    chromium chromium-driver \
+    build-essential libglib2.0-0 libnss3 libgconf-2-4 libx11-xcb1 libxcomposite1 libxcursor1 libxdamage1 libxrandr2 \
+    libgbm-dev libasound2 libatk-bridge2.0-0 libgtk-3-0 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables for Chromium
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+
+# Create working directory
+WORKDIR /app
+
+# Copy project files
+COPY requirements.txt .
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Copy app files
+COPY . .
+
+# Ensure logs flush immediately
+ENV PYTHONUNBUFFERED=1
+
+# Run script
+CMD ["python", "app.py"]
