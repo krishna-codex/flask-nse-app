@@ -1,0 +1,57 @@
+# Use an official Python runtime based on Alpine as a parent image
+FROM python:3.9-alpine
+
+# This hack is widely applied to avoid python printing issues in docker containers.
+# See: https://github.com/Docker-Hub-frolvlad/docker-alpine-python3/pull/13
+ENV PYTHONUNBUFFERED=1
+
+# Set the working directory
+WORKDIR /app
+
+# Install necessary dependencies
+RUN apk add --no-cache \
+    bash \
+    chromium \
+    chromium-chromedriver \
+    libffi-dev \
+    build-base \
+    postgresql-dev \
+    libgcc \
+    musl-dev \
+    && pip install --no-cache-dir virtualenv
+
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+# Create a virtual environment
+RUN python -m venv /opt/venv && \
+    /opt/venv/bin/pip install --upgrade pip && \
+    /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+
+# Activate the virtual environment and install dependencies
+# RUN /bin/bash -c "source /opt/venv/bin/activate && pip install --no-cache-dir -r requirements.txt"
+
+# Copy the rest of the application code into the container
+COPY . .
+
+RUN echo 'export PATH=$PATH:/usr/bin/chromedriver' >> ~/.bash_profile
+RUN source ~/.bash_profile
+
+# Ensure the virtual environment is activated when running the container
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Set environment variables for Chrome
+ENV CHROME_BIN=/usr/bin/chromium-browser
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+
+# Ensure chromedriver is executable
+RUN chmod +x /usr/bin/chromedriver
+
+# Create a non-root user with an explicit UID and add permission to access the /app folder
+RUN adduser --uid 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
+
+# Switch to the non-root user
+USER appuser
+
+# Set the default command to run the application
+CMD ["python", "app.py"]
