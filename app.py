@@ -60,25 +60,48 @@ def save_to_postgres(df, table):
     except Exception as e:
         print(f"❌ DB Error: {e}")
 
+def webdriver_config():
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Run in headless mode (optional)
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    prefs = {
+        "download.prompt_for_download": False,        
+        "download.directory_upgrade": True,
+        "safebrowsing.enabled": True
+    }
+    chrome_options.add_experimental_option("prefs", prefs)
+
+    # Set up the ChromeDriver service
+    service = Service(executable_path='/usr/bin/chromedriver')
+
+    # Initialize the Chrome WebDriver
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    return driver
+
+
+
+
 def connect_and_scrape():
     try:
-        options = Options()
-        options.add_argument("--headless=new")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--window-size=1920,1080")
-        options.add_argument("--remote-debugging-port=9222")
-        options.add_argument("--disable-extensions")
-        options.add_argument("--disable-infobars")
-        options.add_argument("--start-maximized")
-        options.add_argument("--disable-accelerated-2d-canvas")
-        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.224 Safari/537.36")
-        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        # options = Options()
+        # options.add_argument("--headless=new")
+        # options.add_argument("--no-sandbox")
+        # options.add_argument("--disable-dev-shm-usage")
+        # options.add_argument("--disable-gpu")
+        # options.add_argument("--disable-blink-features=AutomationControlled")
+        # options.add_argument("--window-size=1920,1080")
+        # options.add_argument("--remote-debugging-port=9222")
+        # options.add_argument("--disable-extensions")
+        # options.add_argument("--disable-infobars")
+        # options.add_argument("--start-maximized")
+        # options.add_argument("--disable-accelerated-2d-canvas")
+        # options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.224 Safari/537.36")
+        # options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
-        print("🌐 Launching headless browser...")
-        driver = webdriver.Chrome(service=Service(), options=options)
+        # print("🌐 Launching headless browser...")
+        # driver = webdriver.Chrome(service=Service(), options=options)
+        driver = webdriver_config()
         driver.implicitly_wait(10)
 
         driver.get("https://www.nseindia.com")
